@@ -1,0 +1,4 @@
+builds:
+  include:
+    # build for every system
+    - 'packages.*.hello-garnix'
