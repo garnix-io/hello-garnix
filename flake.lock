@@ -1,5 +1,17 @@
 {
   "nodes": {
+    "gcipher": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-7QDCKEUWSXhKVD3EPA1VR5K5GdXBj8eNxZOGO9Mm7r0=",
+        "type": "tarball",
+        "url": "https://sourceforge.net/projects/gcipher/files/gcipher/1.1/gcipher-1.1.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://sourceforge.net/projects/gcipher/files/gcipher/1.1/gcipher-1.1.tar.gz"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1644486793,
@@ -16,6 +28,7 @@
     },
     "root": {
       "inputs": {
+        "gcipher": "gcipher",
         "nixpkgs": "nixpkgs"
       }
     }

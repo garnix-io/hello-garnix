@@ -1,13 +1,52 @@
 {
   description = "A very basic flake";
 
-  outputs = { self, nixpkgs }: {
+  inputs.gcipher = {
+    url =
+      "https://sourceforge.net/projects/gcipher/files/gcipher/1.1/gcipher-1.1.tar.gz";
+    flake = false;
+  };
 
-    packages.x86_64-linux.hello-garnix =
-      let pkgs = import nixpkgs {
-        system = "x86_64-linux";
+  outputs = inputs@{ self, nixpkgs, ... }:
+    let inherit (nixpkgs) lib;
+    in {
+
+      overlays.gcipher = self: super: {
+        gcipher-cli = self.callPackage
+          ({ stdenvNoCC, makeWrapper, python, lib }:
+            stdenvNoCC.mkDerivation rec {
+              name = "gcipher";
+              version = "1.1";
+              src = inputs.gcipher;
+              # Always run command-line version
+              patchPhase = ''
+                substituteInPlace src/MainCLI.py --replace 'len(argv) > 1' 'True'
+              '';
+              compilePhase = "";
+              buildInputs = [ makeWrapper python ];
+              installPhase = ''
+                mkdir -p $out/{bin,share/{man/man1,doc/${name},${name}}}
+                cp CONTRIB LICENSE README $out/share/doc/${name}
+                cp gcipher.1 $out/share/man/man1
+                cp -r src/{gcipher,MainCLI.py,Const.py,AutomaticClass.py,cipher} $out/share/${name}
+                makeWrapper $out/share/${name}/gcipher $out/bin/gcipher
+              '';
+              meta = {
+                maintainers = [ lib.maintainers.league ];
+                platforms = lib.platforms.all;
+                mainProgram = "gcipher";
+              };
+            }) { };
       };
-      in pkgs.stdenv.mkDerivation {
+
+      packages.x86_64-linux.gcipher-cli = (import nixpkgs {
+        system = "x86_64-linux";
+        overlays = [ self.overlays.gcipher ];
+      }).gcipher-cli;
+
+      packages.x86_64-linux.hello-garnix =
+        let pkgs = import nixpkgs { system = "x86_64-linux"; };
+        in pkgs.stdenv.mkDerivation {
           name = "hello-garnix";
 
           unpackPhase = ":";
@@ -34,13 +73,8 @@
             cp an-executable $out/bin/
           '';
 
-
           doCheck = true;
 
         };
-
-
-    defaultPackage.x86_64-linux = self.packages.x86_64-linux.hello-garnix;
-
-  };
+    };
 }
