@@ -8,11 +8,20 @@
   };
 
   outputs = inputs@{ self, nixpkgs, ... }:
-    let inherit (nixpkgs) lib;
+    let
+      inherit (nixpkgs) lib;
+
+      eachSystem = lib.genAttrs [ "x86_64-linux" ];
+
+      pkgs = eachSystem (system:
+        import nixpkgs {
+          inherit system;
+          overlays = [ self.overlays.gcipher ];
+        });
     in {
 
-      overlays.gcipher = self: super: {
-        gcipher-cli = self.callPackage
+      overlays.gcipher = final: prev: {
+        gcipher-cli = final.callPackage
           ({ stdenvNoCC, makeWrapper, python, lib }:
             stdenvNoCC.mkDerivation rec {
               name = "gcipher";
@@ -39,18 +48,12 @@
             }) { };
       };
 
-      packages.x86_64-linux.gcipher-cli = (import nixpkgs {
-        system = "x86_64-linux";
-        overlays = [ self.overlays.gcipher ];
-      }).gcipher-cli;
+      packages = eachSystem (system: {
+        inherit (pkgs.${system}) gcipher-cli;
 
-      packages.x86_64-linux.hello-garnix =
-        let pkgs = import nixpkgs { system = "x86_64-linux"; };
-        in pkgs.stdenv.mkDerivation {
+        hello-garnix = pkgs.${system}.stdenv.mkDerivation {
           name = "hello-garnix";
-
           unpackPhase = ":";
-
           buildPhase = ''
             echo "Just building some things; don't mind me"
             cat > an-executable <<EOF
@@ -58,7 +61,6 @@
             EOF
             chmod +x an-executable
           '';
-
           checkPhase = ''
             echo "Looking around to see if anything is amiss.."
             OUTPUT=$(./an-executable)
@@ -67,14 +69,12 @@
               exit 1
             fi
           '';
-
           installPhase = ''
             mkdir -p $out/bin
             cp an-executable $out/bin/
           '';
-
           doCheck = true;
-
         };
+      });
     };
 }
