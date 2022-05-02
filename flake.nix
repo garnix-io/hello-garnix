@@ -25,7 +25,7 @@
           ({ stdenvNoCC, makeWrapper, python, lib }:
             stdenvNoCC.mkDerivation rec {
               name = "gcipher";
-              version = "1.1";
+              version = "1.2";
               src = inputs.gcipher;
               # Always run command-line version
               patchPhase = ''
@@ -35,7 +35,7 @@
               buildInputs = [ makeWrapper python ];
               installPhase = ''
                 mkdir -p $out/{bin,share/{man/man1,doc/${name},${name}}}
-                cp CONTRIB LICENSE README $out/share/doc/${name}
+                cp CONTRIB README $out/share/doc/${name}
                 cp gcipher.1 $out/share/man/man1
                 cp -r src/{gcipher,MainCLI.py,Const.py,AutomaticClass.py,cipher} $out/share/${name}
                 makeWrapper $out/share/${name}/gcipher $out/bin/gcipher
@@ -55,7 +55,7 @@
           name = "hello-garnix";
           unpackPhase = ":";
           buildPhase = ''
-            echo "Just building some things; don't mind me"
+            echo "Just building some things; don't especially mind me"
             cat > an-executable <<EOF
             echo "Hello from an executable!"
             EOF
